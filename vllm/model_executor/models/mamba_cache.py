@@ -51,6 +51,30 @@ class MambaCacheManager(ConstantSizeCache):
     def cache(self):
         return self._mamba_cache
 
+    def sleep(self):
+        print(f"MambaCache, moving tensors to CPU")
+        # Move tensors to CPU and free GPU memory
+        conv_state_cpu = self._mamba_cache[0].cpu().clone()
+        temporal_state_cpu = self._mamba_cache[1].cpu().clone()
+
+        # Free GPU memory by deleting the original tensors
+        # Store references to GPU tensors before replacing the tuple
+        gpu_conv_state = self._mamba_cache[0]
+        gpu_temporal_state = self._mamba_cache[1]
+
+        # Replace the tuple with CPU tensors
+        self._mamba_cache = (conv_state_cpu, temporal_state_cpu)
+
+        # Now delete the GPU tensors
+        del gpu_conv_state
+        del gpu_temporal_state
+        torch.cuda.empty_cache()
+
+    def wake_up(self):
+        print(f"MambaCache, moving tensors to GPU")
+        # Move tensors back to GPU
+        self._mamba_cache = (self._mamba_cache[0].to(torch.device("cuda")), self._mamba_cache[1].to(torch.device("cuda")))
+
     def _copy_cache(self, from_index: int, to_index: int):
         for cache_t in self.cache:
             cache_t[:, to_index].copy_(cache_t[:, from_index],

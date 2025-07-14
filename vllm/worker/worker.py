@@ -143,6 +143,10 @@ class Worker(LocalOrDistributedWorkerBase):
                 for name, buffer in model.named_buffers()
             }
 
+        if hasattr(self.model_runner.model, "mamba_cache"):
+            mamba_cache = self.model_runner.model.mamba_cache
+            mamba_cache.sleep()
+
         allocator = CuMemAllocator.get_instance()
         allocator.sleep(offload_tags=("weights", ) if level == 1 else tuple())
         free_bytes_after_sleep, total = torch.cuda.mem_get_info()
@@ -165,6 +169,10 @@ class Worker(LocalOrDistributedWorkerBase):
                 if name in self._sleep_saved_buffers:
                     buffer.data.copy_(self._sleep_saved_buffers[name].data)
             self._sleep_saved_buffers = {}
+
+        if hasattr(self.model_runner.model, "mamba_cache"):
+            mamba_cache = self.model_runner.model.mamba_cache
+            mamba_cache.wake_up()
 
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
