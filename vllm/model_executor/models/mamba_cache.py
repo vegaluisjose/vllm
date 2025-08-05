@@ -44,7 +44,7 @@ class MambaCacheManager(ConstantSizeCache):
                                  device="cuda").transpose(-1, -2)
         temporal_state = torch.empty(size=(num_mamba_layers, max_batch_size) +
                                      temporal_state_shape,
-                                     dtype=dtype,
+                                     dtype=torch.float32,
                                      device="cuda")
 
         self._mamba_cache = (conv_state, temporal_state)
