@@ -151,8 +151,6 @@ def _mamba_chunk_scan_combined_fwd(
         initial_states=initial_states,
     )
 
-    states = states.to(torch.half)
-
     if return_intermediate_states:
         return states
     else:
