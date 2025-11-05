@@ -119,7 +119,7 @@ def _mamba_chunk_scan_combined_fwd(
         if initial_states is not None
         else None,  # (batch, nheads, headdim*dstate)
         seq_idx=seq_idx,
-        out_dtype=state_dtype if state_dtype is not None else C.dtype,
+        out_dtype=torch.float32,
     )
     states = rearrange(states, "... (p n) -> ... p n", n=dstate)
 
@@ -150,6 +150,8 @@ def _mamba_chunk_scan_combined_fwd(
         z=z,
         initial_states=initial_states,
     )
+
+    states = states.to(torch.half)
 
     if return_intermediate_states:
         return states
